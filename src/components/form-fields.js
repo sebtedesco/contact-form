@@ -1,47 +1,163 @@
-import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
-import TextField from '@material-ui/core/TextField';
+import React from "react";
+import TextField from "@material-ui/core/TextField";
+import Button from "@material-ui/core/Button";
 
-
-export default class ContactForm extends React.Component {
+export default class FormFields extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
+    this.state ={
       fullName: '',
       email: '',
-      message: ''
+      message: '',
+      errors: {
+        name: false,
+        email: false,
+        message: false
+      },
+      errorFree: false
+    }
+    this.handleChange = this.handleChange.bind(this);
+    this.handleValidation = this.handleValidation.bind(this);
+    this.buttonClicked = this.buttonClicked.bind(this);
+  }
+
+  handleChange(event) {
+    event.preventDefault();
+    const name = event.target.name;
+    let value;
+    value = event.target.value;
+    const errors = { ...this.state.errors };
+    errors[name] = false
+    this.setState({
+      [name]: value,
+      errors
+    })
+    }
+
+  handleValidation(event) {
+    event.preventDefault();
+    const name = event.target.name;
+    const errors = { ...this.state.errors };
+    // const value = event.target.value;
+    const fullNameRegex = new RegExp(/(?:(\w+-?\w+)) (?:(\w+))(?: (\w+))?$/)
+    const emailRegex = new RegExp(
+      /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/g
+    );
+
+    switch (name) {
+      case "fullName":
+        if (!fullNameRegex.test(this.state[name])) {
+          errors.fullName = true;
+          this.setState({
+            errors,
+          });
+        }
+        break;
+      case "email":
+        if (!emailRegex.test(this.state[name])) {
+          errors.email = true;
+          this.setState({
+            errors,
+          });
+        }
+        break;
+      case "message":
+        if (!this.state.message) {
+          errors.message = true;
+          this.setState({
+            errors,
+          });
+        }
+        break;
+      }
+    this.setState({ errors }, () => {
+      this.errorFree();
+    });
+  }
+
+  errorFree() {
+    if (!this.state.errors.fullName && this.state.fullName, !this.state.errors.email && this.state.email, !this.state.errors.message, this.state.message) {
+      this.setState({ errorFree: true });
+    } else {
+      this.setState({ errorFree: false });
     }
   }
 
-  //Handle fields change
-
-
-  render() {
-    // const useStyles = makeStyles((theme) => ({
-    //   root: {
-    //     '& > *': {
-    //       margin: theme.spacing(1),
-    //       width: '38ch',
-    //     },
-    //   },
-    // }));
-
-    // const classes = useStyles();
-
-    return (
-      <form className="form-container" noValidate autoComplete="off">
-        <TextField id="outlined-basic" label="Full Name" variant="outlined" />
-        <TextField id="outlined-basic" label="Email Address" variant="outlined" />
-        <TextField
-          id="outlined-multiline-static"
-          label="Message"
-          multiline
-          rows={8}
-          variant="outlined"
-        />
-      </form>
-    );
-
+  buttonClicked(){
+    console.log(this.state.errorFree)
+    if(this.state.errorFree){
+      this.props.sendEmail(this.state)
+    }
   }
 
+  render(){
+    return (
+      <div className={this.useStyles}>
+        <div>
+          <TextField
+            error={this.state.errors.fullName ? "error" : ""}
+            id="standard"
+            label={this.state.errors.fullName ? "Error" : "Full Name"}
+            name="fullName"
+            value={this.state.fullName}
+            onChange={this.handleChange}
+            onBlur={this.handleValidation}
+            style={{ margin: 8 }}
+            placeholder="Full Name"
+            helperText={
+              this.state.errors.fullName
+                ? "Incorrect entry."
+                : "Please enter full name."
+            }
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <br />
+          <TextField
+            error={this.state.errors.email ? "error" : ""}
+            id="standard"
+            label={this.state.errors.email ? "Error" : "Email Address"}
+            name="email"
+            value={this.state.email}
+            onChange={this.handleChange}
+            onBlur={this.handleValidation}
+            style={{ margin: 8 }}
+            placeholder="Email Address"
+            helperText={
+              this.state.errors.email
+                ? "Please enter a valid email address."
+                : "Please enter an email address."
+            }
+            margin="normal"
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            error={this.state.errors.message ? "error" : ""}
+            id="outlined-multiline-static"
+            label={
+              this.state.errors.message ? "Message cannot be blank." : "Message"
+            }
+            name="message"
+            value={this.state.message}
+            onChange={this.handleChange}
+            onBlur={this.handleValidation}
+            fullWidth
+            multiline
+            rows={8}
+            variant="outlined"
+          />
+          <br />
+          <Button
+            onClick={ this.buttonClicked }
+          >
+            Submit
+          </Button>
+        </div>
+      </div>
+    );
+  }
 }
